@@ -1,0 +1,601 @@
+install.packages("foreign")
+library(foreign)
+world=read.spss(file.choose(),to.data.frame=TRUE,add.undeclared.levels="no")
+world
+head(world)
+world$polegw==-1
+##antikathistw sthn metavliti polegw to -1 me NA
+world[world$polegw==-1,]$polegw=NA
+world$polegw=as.factor(world$polegw)
+levels(world$polegw)=c("Strongly Unequal","Weakly Unequal","Weakly Equal","Strongly Equal")
+head(world)
+str(world)
+###ftiaxnw thn nea metavliti
+NewPopurban=c()
+NewPopurban[world$popurban<=27]=1
+NewPopurban[world$popurban>27 &world$popurban<=46]=2
+NewPopurban[world$popurban>46 &world$popurban<=67]=3
+NewPopurban[world$popurban>67]=4
+world$NewPopurban=NewPopurban
+head(world)
+world$NewPopurban=as.factor(world$NewPopurban)
+levels(world$NewPopurban)=c("Very Low","Low","Normal","High")
+###PERIGRAFIKI STATISTIKI
+descriptives=function(x){
+  n=length(x)
+  mu=mean(x)
+  med=median(x)
+  q1=quantile(x,0.25)
+  q2=quantile(x,0.75)
+  sd=sd(x)
+  cv=sd(x)/mean(x)
+  kurtosis=sum((x-mu)^4)/(n*sd^4)-3
+  symmetry=sum((x-mu)^3)/(n*sd^3)
+  d=c(mu,med,q1,q2,sd,cv,kurtosis,symmetry)
+  names(d)=c("mesos oros","median","Q1","Q2","SD","CV","kurtosis","symmetry")
+  return(d)
+}
+
+descriptives(na.omit(world$population))
+descriptives(na.omit(world$deathrate))
+descriptives(na.omit(world$popurban))
+descriptives(na.omit(world$growth))
+descriptives(na.omit(world$saving))
+descriptives(na.omit(world$electcon))
+descriptives(na.omit(world$cpi))
+descriptives(na.omit(world$educexpc))
+
+##trimmean gia to cpi giati paratirw polles akraies times
+world$cpi
+#A ten percent trimmed mean, for example represents the mean of a dataset 
+#after the ten percent smallest and greatest values have been eliminated.
+mean(na.omit(world$cpi, trim=0.1))
+
+
+
+##perigrafika metra katigorikwn
+prop.table(table(world$polegw))
+prop.table(table(world$NewPopurban))
+
+
+
+par(mfrow=c(3,3))
+##hist for population
+hist(world$population,probability = T,main="Histogram for Population",border="white",col="green")
+x<-world$population
+mean<-mean(x)
+sd<-sd(x)
+curve(dnorm(x,mean,sd),col="violetred",add=T,lwd=2) 
+
+
+##hist for deathrate
+hist(world$deathrate,probability = T,main="Histogram for Deathrate",border="white",col="red")
+x=world$deathrate
+mean<-mean(x)
+sd<-sd(x)
+curve(dnorm(x,mean,sd),col="black",add=T,lwd=2) 
+
+##hist for popurban
+hist(world$popurban,ylim=c(0,0.02),probability=T,main="Histogram for Popurban",border="white",col="blue")
+x=world$popurban
+mean<-mean(x)
+sd<-sd(x)
+curve(dnorm(x,mean,sd),col="red",add=T,lwd=2)
+
+shapiro.test(world$popurban)
+##hist for Growth
+hist(world$growth,probability = T,main="Histogram for Growth",border="white",col="orange")
+x=world$growth
+mean<-mean(x)
+sd<-sd(x)
+curve(dnorm(x,mean,sd),col="grey",add=T,lwd=2)
+
+##hist for saving
+hist(world$saving,probability = T,main="Histogram for Saving",border="white",col="pink")
+x=world$saving
+mean<-mean(x)
+sd<-sd(x)
+curve(dnorm(x,mean,sd),col="green",add=T,lwd=2)
+
+##hist for Electcon
+hist(world$electcon,probability = T,main="Histogram for Electcon",border="white",col="brown")
+x=world$electcon
+mean<-mean(x)
+sd<-sd(x)
+curve(dnorm(x,mean,sd),col="green",add=T,lwd=2)
+
+
+##hist for CPI
+hist(world$cpi,probability = T,main="Histogram for CPI",border="white",col="cadetblue")
+x=world$cpi
+mean<-mean(x)
+sd<-sd(x)
+curve(dnorm(x,mean,sd),col="green",add=T,lwd=2)
+
+
+t1=prop.table(table(world$polegw))
+t2=prop.table(table(world$NewPopurban))
+par(mfrow=c(2,1))
+barplot(t2,col=4:7,main="Percentages of Urbanization",ylab="Percentage of Urbanization",
+        xlab="Levels of Urbanization",legend=names(t2),beside=TRUE)
+barplot(t1,col = 10:13,main="Percentages of Inequality",ylab="Percentage of Inequality",
+        xlab="Levels of Inequality",beside=TRUE)
+
+
+
+###ΕΛΕΓΟΣ ΜΕΤΑΒΛΗΤΩΝ ΑΝΑ ΖΕΥΓΗ
+
+##  POSOTIKI + POSOTIKI 
+
+
+shapiro.test(world$population)
+##2.2e-16
+number1 <- 2.2e-16
+formatted_number1 <- format(number1, scientific = FALSE)
+formatted_number1
+#den akolouthei kanoniki katanomi
+
+shapiro.test(world$deathrate)
+##3.808e-06
+number2 <- 3.808e-06
+formatted_number2 <- format(number2, scientific = FALSE)
+formatted_number2
+#den akolouthei kanoniki katanomi
+
+shapiro.test(world$popurban)
+##0.00628
+#den akolouthei kanoniki katanomh
+
+
+shapiro.test(world$growth)
+##0.0167
+#den akolouthei kanoniki katanomh
+
+shapiro.test(world$saving)
+##4.485e-13
+number3 <- 4.485e-13
+formatted_number3 <- format(number3, scientific = FALSE)
+formatted_number3
+#den akolouthei kanoniki katanomh
+
+shapiro.test(world$electcon)
+##7.119e-15
+number4 <- 7.119e-15
+formatted_number4 <- format(number4, scientific = FALSE)
+formatted_number4
+#den akolouthei kanoniki katanomh
+
+shapiro.test(world$educexpc)
+##3.207e-14
+number5 <- 3.207e-14
+formatted_number5 <- format(number5, scientific = FALSE)
+formatted_number5
+#den akolouthei kanoniki katanomh
+
+
+shapiro.test(world$cpi)
+##2.2e-16
+number6 <- 2.2e-16
+formatted_number6 <- format(number6, scientific = FALSE)
+formatted_number6
+#den akolouthei kanoniki katanomh
+
+
+##cor.test
+install.packages('nortest')
+library(nortest)
+
+#population~deathrate
+cor.test(world$population,world$deathrate,method='spearman')
+#p-value>0.05 DEN aporiptw Ho ,ara den uparxei sisxetisi
+
+#population~popurban
+cor.test(world$population,world$popurban,method='spearman')
+#p-value >0.05 DEN aporipotw Ho,ara den uparxei sisxetisi
+
+#population~growth
+cor.test(world$population,world$growth,method='spearman')
+#p-value<0.05 ara uparxei statistika simantiki susxetisi
+
+#population~saving
+cor.test(world$population,world$saving,method='spearman')
+#p-value>0.05 DEN aporiptw Ho ,ara den uparxei sisxetisi
+
+#population~electon
+cor.test(world$population,world$electcon,method='spearman')
+#p-value>0.05 DEN aporiptw Ho ,ara den uparxei sisxetisi
+
+#population~educexpc
+cor.test(world$population,world$educexpc,method='spearman')
+#p-value>0.05 DEN aporiptw Ho ,ara den uparxei sisxetisi
+
+#population~cpi
+cor.test(world$population,world$cpi,method='spearman')
+#p-value>0.05 DEN aporiptw Ho,ara den uparxei susxetisi
+
+#deathrate~popurban
+cor.test(world$deathrate,world$popurban,method='spearman')
+#p-value<0.05 ara uparxei statistika simantiki susxetisi
+
+#deathrate~growth
+cor.test(world$deathrate,world$growth,method='spearman')
+##p-value<0.05 ara uparxei statistika simantiki susxetisi
+
+#deathrate~saving
+cor.test(world$deathrate,world$saving,method='spearman')
+###p-value<0.05 ara uparxei statistika simantiki susxetisi
+
+#deathrate~electcon
+cor.test(world$deathrate,world$electcon,method='spearman')
+##p-value<0.05 ara uparxei statistika simantiki susxetisi
+
+#deathrate~educexpc
+cor.test(world$deathrate,world$educexpc,method='spearman')
+##p-value<0.05 ara uparxei statistika simantiki susxetisi
+
+#deathrate~cpi
+cor.test(world$deathrate,world$cpi,method='spearman')
+#p-value>0.05 DEN aporiptw Ho ,ara den uparxei sisxetisi
+
+#popurban~growth
+cor.test(world$popurban,world$growth,method='spearman')
+##p-value<0.05 ara uparxei statistika simantiki susxetisi
+
+#popurban~saving
+cor.test(world$popurban,world$saving,method='spearman')
+##p-value<0.05 ara uparxei statistika simantiki susxetisi
+
+#popurban~electcon
+cor.test(world$popurban,world$electcon,method='spearman')
+##p-value<0.05 ara uparxei statistika simantiki susxetisi
+
+#popurban~educexpc
+cor.test(world$popurban,world$educexpc,method='spearman')
+##p-value<0.05 ara uparxei statistika simantiki susxetisi
+
+#popurban~cpi
+cor.test(world$popurban,world$cpi,method='spearman')
+#p-value>0.05 DEN aporiptw Ho ,ara den uparxei sisxetisi
+
+#growth~saving
+cor.test(world$growth,world$saving,method='spearman')
+##p-value<0.05 ara uparxei statistika simantiki susxetisi
+
+#growth~electcon
+cor.test(world$growth,world$electcon,method='spearman')
+##p-value<0.05 ara uparxei statistika simantiki susxetisi
+
+#growth~educexpc
+cor.test(world$growth,world$educexpc,method='spearman')
+##p-value<0.05 ara uparxei statistika simantiki susxetisi
+
+#growth~cpi
+cor.test(world$growth,world$cpi,method='spearman')
+#p-value>0.05 DEN aporiptw Ho ,ara den uparxei sisxetisi
+
+
+#saving~electcon
+cor.test(world$saving,world$electcon,method='spearman')
+##p-value<0.05 ara uparxei statistika simantiki susxetisi
+
+#saving~educexpc
+cor.test(world$saving,world$educexpc,method='spearman')
+##p-value<0.05 ara uparxei statistika simantiki susxetisi
+
+#saving~cpi
+cor.test(world$saving,world$cpi,method='spearman')
+##p-value<0.05 ara uparxei statistika simantiki susxetisi
+
+#electcon~educexpc
+cor.test(world$electcon,world$educexpc,method='spearman')
+##p-value<0.05 ara uparxei statistika simantiki susxetisi
+
+#electcon~cpi
+cor.test(world$electcon,world$cpi,method='spearman')
+#p-value>0.05 DEN aporiptw Ho ,ara den uparxei sisxetisi
+
+#educexpc~cpi
+cor.test(world$educexpc,world$cpi,method='spearman')
+#p-value>0.05 DEN aporiptw Ho ,ara den uparxei sisxetisi
+
+
+
+###ELEGXOI DIAKIMANSEWN ANOVA####
+#NewPopurban~Population
+anova1=aov(world$population~world$NewPopurban)
+summary(anova1)
+#p-value>5%
+shapiro.test(anova1$res)
+#p-value<2.2e-16 , w=0.451
+mean(anova1$res)
+median(anova1$res)
+kruskal.test(world$population~world$NewPopurban)
+pairwise.wilcox.test(world$population,world$NewPopurban,p.adjust.method = "bonf",paired=F)
+tapply(world$population,world$NewPopurban,summary)
+boxplot(world$population~world$NewPopurban,main="POPULATION~NEWPOPURBAN")
+
+##NewPopurban~Deathrate
+anova2=aov(world$deathrate~world$NewPopurban)
+summary(anova2)
+shapiro.test(anova2$res)
+#p-value>5%
+mean(anova2$res)
+median(anova2$res)
+kruskal.test(world$deathrate~world$NewPopurban)
+pairwise.wilcox.test(world$deathrate,world$NewPopurban,p.adjust.method = "bonf",paired=F)
+tapply(world$deathrate,world$NewPopurban,summary)
+boxplot(world$deathrate~world$NewPopurban,main="NEWPOPURBAN~DEATHRATE")
+
+##NewPopurban~Growth
+anova3=aov(world$growth~world$NewPopurban)
+summary(anova3)
+shapiro.test(anova3$res)
+mean(anova3$res)
+median(anova3$res)
+kruskal.test(world$growth~world$NewPopurban)
+pairwise.wilcox.test(world$growth,world$NewPopurban,p.adjust.method = "bonf",paired=F)
+tapply(world$growth,world$NewPopurban,summary)
+boxplot(world$growth~world$NewPopurban,main="NEWPOPURBAN~GROWTH")
+
+##NewPopurban~saving
+anova4=aov(world$saving~world$NewPopurban)
+summary(anova4)
+shapiro.test(anova4$res)
+mean(anova4$res)
+median(anova4$res)
+kruskal.test(world$saving~world$NewPopurban)
+pairwise.wilcox.test(world$saving,world$NewPopurban,p.adjust.method = "bonf",paired=F)
+tapply(world$saving,world$NewPopurban,summary)
+boxplot(world$saving~world$NewPopurban,main="NEWPOPURBAN~SAVING")
+
+####WORD_MATERIAL####
+##NewPopurban~Electcon
+anova5=aov(world$electcon~world$NewPopurban)
+summary(anova5)
+shapiro.test(anova5$res)
+mean(anova5$res)
+#O MESOS DEN EINAI KATALILO METRO
+median(anova5$res)
+#O MESOS DEN EINAI KATALILO METRO AFOU EINAI KONTA STO 0 KAI H DIAMESOS -110 ARA DEN PROSEGGIZEI NORMALITY
+#KANW KRUSKAL GIA NA DW TIS DIAMESOUS
+kruskal.test(world$electcon~world$NewPopurban)
+#p-value=1.895e-15 chi-squared=73.448
+TukeyHSD(anova5)
+#gia ta 4 epipeda astikopoihshs vlepw oti uparxei diafora metaksu twn epipedwn
+#Normal-Very Low , High-Very Low kai High-Low 
+
+pairwise.wilcox.test(world$electcon,world$NewPopurban,p.adjust.method = "bonf",paired=F)
+tapply(world$electcon,world$NewPopurban,summary)
+boxplot(world$electcon~world$NewPopurban,main="Electricity Consumption for Each Level of Urbanization",
+        col=8:11,ylab="Electricity Consumption",xlab="Levels of Urbanization")
+
+##NewPopurban~cpi
+anova6=aov(world$cpi~world$NewPopurban)
+summary(anova6)
+shapiro.test(anova6$res)
+mean(anova6$res)
+median(anova6$res)
+kruskal.test(world$cpi~world$NewPopurban)
+pairwise.wilcox.test(world$cpi,world$NewPopurban,p.adjust.method = "bonf",paired=F)
+tapply(world$cpi,world$NewPopurban,summary)
+boxplot(world$cpi~world$NewPopurban,main="CPI~NewPopurBan")
+
+##NewPopurban~educexpc
+anova7=aov(world$educexpc~world$NewPopurban)
+summary(anova7)
+shapiro.test(anova7$res)
+mean(anova7$res)
+median(anova7$res)
+kruskal.test(world$educexpc~world$NewPopurban)
+pairwise.wilcox.test(world$educexpc,world$NewPopurban,p.adjust.method = "bonf",paired=F)
+tapply(world$educexpc,world$NewPopurban,summary)
+boxplot(world$educexpc~world$NewPopurban,main="NewPopurban~EDUCEXPC")
+
+##Polegw~Population
+anova8=aov(world$population~world$polegw)
+summary(anova8)
+shapiro.test(anova8$res)
+mean(anova8$res)
+median(anova8$res)
+kruskal.test(world$population~world$polegw)
+pairwise.wilcox.test(world$population,world$polegw,p.adjust.method = "bonf",paired=F)
+tapply(world$population,world$polegw,summary)
+boxplot(world$population~world$polegw,main="POLEGW~POPULATION")
+
+##Polegw~deathrate
+anova9=aov(world$deathrate~world$polegw)
+summary(anova9)
+mean(anova9$res)
+median(anova9$res)
+kruskal.test(world$deathrate~world$polegw)
+pairwise.wilcox.test(world$deathrate,world$polegw,p.adjust.method = "bonf",paired=F)
+tapply(world$deathrate,world$polegw,summary)
+boxplot(world$deathrate~world$polegw,main="POLEGW~DEATHRATE")
+
+##Polegw~popurban
+anova10=aov(world$popurban~world$polegw)
+summary(anova10)
+mean(anova10$res)
+median(anova10$res)
+kruskal.test(world$popurban~world$polegw)
+pairwise.wilcox.test(world$popurban,world$polegw,p.adjust.method = "bonf",paired=F)
+tapply(world$popurban,world$polegw,summary)
+boxplot(world$popurban~world$polegw,main="POLEGW~POPURBAN")
+
+##Polegw~Growth
+anova11=aov(world$growth~world$polegw)
+summary(anova11)
+mean(anova11$res)
+median(anova11$res)
+kruskal.test(world$growth~world$polegw)
+pairwise.wilcox.test(world$growth,world$polegw,p.adjust.method = "bonf",paired=F)
+tapply(world$growth,world$polegw,summary)
+boxplot(world$growth~world$polegw,main="POLEGW~GROWTH")
+
+##Polegw~Electcon
+anova12=aov(world$electcon~world$polegw)
+summary(anova12)
+mean(anova12$res)
+median(anova12$res)
+kruskal.test(world$electcon~world$polegw)
+TukeyHSD(anova12)
+pairwise.wilcox.test(world$electcon,world$polegw,p.adjust.method = "bonf",paired=F)
+tapply(world$electcon,world$polegw,summary)
+boxplot(world$electcon~world$polegw,main="POLEGW~ELECTCON")
+
+##WORD_MATERIAL##
+##Polegw~Educexpc
+anova13=aov(world$educexpc~world$polegw)
+summary(anova13)
+mean(anova13$res)
+median(anova13$res)
+#o mesos oros einai sxedon 0 kai h diamesos einai -31.11 ara den proseggizei normality
+kruskal.test(world$educexpc~world$polegw)
+#p-value=2.166e-06
+TukeyHSD(anova13)
+#gia ta eksoda ekpaideushs paratirite simantiki diafora stis xwres metaksu pou ta epipeda 
+#isotitas sta nomika kai politika dikeomata metaksu antrwn kai gunaikwn einai weakly equal-weakly unequal
+#kai strongy equal- weakly unequal
+pairwise.wilcox.test(world$educexpc,world$polegw,p.adjust.method = "bonf",paired=F)
+tapply(world$educexpc,world$polegw,summary)
+boxplot(world$educexpc~world$polegw,main="Educational Expenses ~ Gender Equality ",
+        col=2:6,ylab="Educational Expenses",xlab="Women Equality ")
+
+##Polegw~saving
+anova14=aov(world$saving~world$polegw)
+summary(anova14)
+mean(anova14$res)
+median(anova14$res)
+kruskal.test(world$saving~world$polegw)
+pairwise.wilcox.test(world$saving,world$polegw,p.adjust.method = "bonf",paired=F)
+tapply(world$saving,world$polegw,summary)
+boxplot(world$saving~world$polegw,main="POLEGW~SAVING")
+
+##Polegw~cpi
+anova15=aov(world$cpi~world$polegw)
+summary(anova15)
+mean(anova15$res)
+median(anova15$res)
+kruskal.test(world$cpi~world$polegw)
+pairwise.wilcox.test(world$cpi,world$polegw,p.adjust.method = "bonf",paired=F)
+tapply(world$cpi,world$polegw,summary)
+boxplot(world$cpi~world$polegw,main="POLEGW~CPI")
+
+
+#Για να είναι έγκυρο ένα μοντέλο θα πρέπει να μην έχει πολυσυγγραμμικότητα, 
+#να ικανοποιείται η κανονικότητα, η γραμμικότητα, η ομοσκεδαστικότητα,
+#η ανεξαρτησία και ελέγχεται η ύπαρξη ακραίων τιμωνν και σημείων επιρροής.
+
+###MONTELO###
+simple_model=lm(world$growth ~ world$population + world$deathrate + 
+                  world$popurban + world$saving + world$electcon + world$educexpc + 
+                  world$cpi + world$polegw)
+summary(simple_model)
+
+
+##elegxos kanonikotitas katalipwn 
+library(nortest)
+lillie.test(simple_model$res)
+shapiro.test(simple_model$res)
+##p-value=0.053 εχω κανονικοτητα
+par(mfrow=c(3,1))
+hist(simple_model$res,col="cadetblue",main="Histogram of Residuals",xlab="Residuals")
+qqnorm(rstandard(simple_model),col="red")
+qqline(rstandard(simple_model),col="black")
+
+
+##elegxos omoioskedastikotitas
+quancut=function(x,digits=6){cut(x,breaks=quantile(x),include.lowest = T)}
+qfits=quancut(simple_model$fit)
+library(car)
+leveneTest(rstandard(simple_model),qfits)
+#p-value>0.05 ara den aporiptoume Ho opote uparxei omoioskedastikotita
+plot(simple_model$fit, rstandard(simple_model), col="cadetblue",pch=15)
+abline( h= 1.96, col='black', lwd=2, lty=2)
+abline( h=-1.96, col='black', lwd=2, lty=2)
+
+
+#Elegxos Polysyggramikothtas
+install.packages("car")
+library(car)
+vif(simple_model) 
+##metaksu twn metavlitwn den uparxei idietera isxurh susxetisi metaksu twn metavlitwn mou
+#afou oles einai konta sto 1 ektow apo Electcon Educexpc
+
+
+##grammikotita
+residualPlots(simple_model)#me thn paratirisi 41
+
+install.packages("sjPlot")
+library(sjPlot)
+library(sjPlot)
+tab_model(simple_model)
+
+
+##aneksartisia katalipwn den kanw giati exw diastromatika data
+
+##akraies times-simia epirohs
+par(mfrow=c(2,1))
+outlierTest(simple_model)
+plot(simple_model,which = 4) ##cooks distance
+abline(h=4/27,col="cadetblue")
+plot(simple_model,which=5)##shmeia epirohs
+
+
+
+###afairw to simeio epirohs
+
+worldnew=world[-41,]
+simple_model1=lm(formula = worldnew$growth ~ worldnew$population + worldnew$deathrate + 
+                   worldnew$popurban + worldnew$saving + worldnew$electcon + worldnew$educexpc + 
+                   worldnew$cpi + worldnew$polegw)
+summary(simple_model1)
+##ELEGXOS KANONIKOTITAS
+par(mfrow=c(2,2))
+hist(simple_model1$res)
+qqnorm(rstandard(simple_model1),col="red")
+qqline(rstandard(simple_model1),col="black")
+
+shapiro.test(simple_model1$res)
+lillie.test(simple_model1$res)
+#ARA IKANOPOIEITAI H KANONIKOTITA p-value>0.05
+
+
+##elegxos omoioskedastikotitas
+quancut=function(x,digits=6){cut(x,breaks=quantile(x),include.lowest = T)}
+qfits=quancut(simple_model1$fit)
+library(car)
+leveneTest(rstandard(simple_model1),qfits)
+#p-value>0.05 ara den aporiptoume Ho opote uparxei omoioskedastikotita
+plot(simple_model1$fit, rstandard(simple_model1), col="STEELBLUE",pch=15)
+abline( h= 1.96, col='black', lwd=2, lty=2)
+abline( h=-1.96, col='black', lwd=2, lty=2)
+
+#Elegxos Polysyggramikothtas
+install.packages("car")
+library(car)
+vif(simple_model1) 
+## metaksu twn metavlitwn den uparxei idietera isxurh sugkrammikotita metaksu twn metavlitwn mou 
+#afou oles oi times einai konta sto 1 ektos apo to electcon kai to educexpc
+
+##grammikotita
+residualPlots(simple_model1)#xwris thn paratirisi 41
+
+install.packages("sjPlot")
+library(sjPlot)
+library(sjPlot)
+par(mfrow=c(2,1))
+tab_model(simple_model)
+tab_model(simple_model1)
+summary(simple_model1)
+summary(simple_model)
+
+library(rworldmap)
+d=world
+n=joinCountryData2Map(d,joinCode="NAME",nameJoinColumn="country")
+
+mapCountryData(n,nameColumnToPlot ="cpi",mapTitle="Global CPI")
+mapCountryData(n,nameColumnToPlot ="population",mapTitle="Global population")
+mapCountryData(n,nameColumnToPlot ="polegw",mapTitle="Global Polegw")
+
+mapCountryData(n, nameColumnToPlot="cpi", mapTitle="CPI FOR LATIN AMERICA",mapRegion="Latin America", colourPalette="rainbow")
